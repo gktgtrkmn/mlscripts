@@ -2,7 +2,6 @@ export def sync-uv [] {
   print "Syncing dependencies with uv..."
   try {
     uv sync
-
     if $env.LAST_EXIT_CODE == 0 {
       print $"(ansi green_bold)Environment is ready!(ansi reset)"
     } else {
@@ -26,7 +25,6 @@ export def run-with-cuda [script: string] {
   } else {
     print $"(ansi yellow_bold)CUDA not found!(ansi reset)"
     let ans = (input "Do you want to run on CPU anyway? (y/n): ")
-
     if $ans == "y" {
       "Running on CPU..."
       uv run python $script
