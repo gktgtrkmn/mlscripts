@@ -13,3 +13,9 @@ wheels/
 uv.lock
 
 .direnv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# PA4 data (large, regenerate from source)
+bbm465pa4/embeddings/
