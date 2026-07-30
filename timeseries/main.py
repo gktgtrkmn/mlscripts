@@ -3,8 +3,11 @@ import numpy.typing as npt
 from itertools import combinations
 import matplotlib.pyplot as plt
 import seaborn as sns
+from collections.abc import Callable
+from typing import ParamSpec
 
 np.random.seed(42)
+P = ParamSpec("P")
 
 
 def recurrence_plot(
@@ -35,12 +38,19 @@ def plot(data: npt.NDArray[np.bool_]):
     plt.show()
 
 
-def generate(wave: str) -> npt.NDArray[np.float64]:
-    if wave == "sin":
-        return np.linspace(0, 10 * np.pi, 500)
-    return np.random.normal(size=500)
+def generate(
+    func: Callable[P, npt.NDArray[np.float64]],
+    *args: P.args,
+    **kwargs: P.kwargs,
+) -> npt.NDArray[np.float64]:
+    return func(*args, **kwargs)
 
 
-recurrence = recurrence_plot(generate("sin"), threshold=0.5)
+def sine(n: int, periods: float) -> npt.NDArray[np.float64]:
+    t = np.linspace(0, periods * 2 * np.pi, n)
+    return np.sin(t)
+
+
+recurrence = recurrence_plot(generate(sine, n=500, periods=5), threshold=0.5)
 
 plot(recurrence)
