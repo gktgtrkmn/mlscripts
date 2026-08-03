@@ -1,13 +1,11 @@
+from itertools import combinations
+
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
-from itertools import combinations
-import matplotlib.pyplot as plt
 import seaborn as sns
-from collections.abc import Callable
-from typing import ParamSpec
 
-np.random.seed(42)
-P = ParamSpec("P")
+from generators import Signal, TimeSeriesGenerator
 
 
 def recurrence_plot(
@@ -22,7 +20,7 @@ def recurrence_plot(
     return recurrence
 
 
-def plot(data: npt.NDArray[np.bool_]):
+def plot(data: npt.NDArray[np.bool_]) -> None:
     sns.heatmap(
         data,
         cmap="binary",
@@ -38,19 +36,27 @@ def plot(data: npt.NDArray[np.bool_]):
     plt.show()
 
 
-def generate(
-    func: Callable[P, npt.NDArray[np.float64]],
-    *args: P.args,
-    **kwargs: P.kwargs,
-) -> npt.NDArray[np.float64]:
-    return func(*args, **kwargs)
+def sine(
+    frequency: float,
+    amplitude: float = 1.0,
+    phase: float = 0.0,
+) -> Signal:
+    def signal(
+        time: npt.NDArray[np.float64],
+        _rng: np.random.Generator,
+    ) -> npt.NDArray[np.float64]:
+        return amplitude * np.sin(2 * np.pi * frequency * time + phase)
+
+    return signal
 
 
-def sine(n: int, periods: float) -> npt.NDArray[np.float64]:
-    t = np.linspace(0, periods * 2 * np.pi, n)
-    return np.sin(t)
+def main() -> None:
+    generator = TimeSeriesGenerator(n=500, duration=5.0, seed=42)
+    series = generator.generate(sine(frequency=1.0))
+    recurrence = recurrence_plot(series, threshold=0.5)
+
+    plot(recurrence)
 
 
-recurrence = recurrence_plot(generate(sine, n=500, periods=5), threshold=0.5)
-
-plot(recurrence)
+if __name__ == "__main__":
+    main()
