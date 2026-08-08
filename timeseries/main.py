@@ -6,6 +6,7 @@ import numpy.typing as npt
 import seaborn as sns
 
 from generators import Signal, TimeSeriesGenerator
+from timeseries import Generation
 
 
 def recurrence_plot(
@@ -52,8 +53,9 @@ def sine(
 
 def main() -> None:
     generator = TimeSeriesGenerator(n=500, duration=5.0, seed=42)
-    series = generator.generate(sine(frequency=1.0))
-    recurrence = recurrence_plot(series, threshold=0.5)
+    generation = Generation(generator=generator, signal=sine(frequency=1.0))
+    series = generation.materialize()
+    recurrence = recurrence_plot(series.values, threshold=0.5)
 
     plot(recurrence)
 
