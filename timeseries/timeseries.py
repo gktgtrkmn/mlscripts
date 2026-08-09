@@ -1,6 +1,12 @@
-import numpy as np
+from __future__ import annotations
+
+from collections.abc import Iterator
 from dataclasses import dataclass
-from types import FloatArray, Transform, InPlaceTransform
+
+import numpy as np
+
+from .generators import TimeSeriesGenerator
+from .ts_types import FloatArray, InPlaceTransform, Signal, Transform
 
 
 def prepare_arrays(
@@ -63,3 +69,41 @@ class MutableTimeSeries:
 
 
 type MaterializedTimeSeries = MutableTimeSeries | ImmutableTimeSeries
+
+
+@dataclass(frozen=True, slots=True)
+class LazyTimeSeries:
+    generator: TimeSeriesGenerator
+    signal: Signal
+    chunk_size: int = 1024
+
+    def __post_init__(self) -> None:
+        if self.chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
+
+    def __iter__(self) -> Iterator[ImmutableTimeSeries]:
+        return self.iter_chunks()
+
+    def iter_chunks(
+        self,
+        chunk_size: int | None = None,
+    ) -> Iterator[ImmutableTimeSeries]:
+        size = self.chunk_size if chunk_size is None else chunk_size
+
+        for chunk in self.generator.iter_chunks(self.signal, size):
+            yield ImmutableTimeSeries(time=chunk.time, values=chunk.values)
+
+    def materialize(self) -> ImmutableTimeSeries:
+        generated = self.generator.evaluate(self.signal)
+        return ImmutableTimeSeries(time=generated.time, values=generated.values)
+
+    def materialize_range(
+        self,
+        start: float,
+        stop: float,
+    ) -> ImmutableTimeSeries:
+        generated = self.generator.generate_range(self.signal, start, stop)
+        return ImmutableTimeSeries(time=generated.time, values=generated.values)
+
+
+type TimeSeries = MaterializedTimeSeries | LazyTimeSeries
